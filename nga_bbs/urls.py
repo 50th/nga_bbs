@@ -15,10 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from bbs import views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('backend/', include('backend.urls')),
-    path('bbs/', include('bbs.urls'))
+    path('bbs/', include('bbs.urls')),
+    path('validcode/', views.get_valid_code, name="valid"),
+    path('', views.index)
 ]

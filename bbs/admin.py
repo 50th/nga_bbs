@@ -1,3 +1,5 @@
 from django.contrib import admin
+from bbs_models import models
 
-# Register your models here.
+
+admin.site.register(models.UserProfile)
