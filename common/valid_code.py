@@ -4,11 +4,13 @@ import random
 
 
 class ValidCodeHandler(object):
+    """生成验证码"""
     def __init__(self, width=90, height=40):
         self.width = width
         self.height = height
 
     def get_valid_code(self):
+        """生成验证码"""
         valid_code = ""
         for i in range(0, 4):
             k = random.randrange(0, 4)
@@ -30,6 +32,7 @@ class ValidCodeHandler(object):
         return (c1, c2, c3)
 
     def get_valid_img(self):
+        """生成验证码图片"""
         img = Image.new("RGB", (self.width, self.height), (255, 255, 255))
         font = ImageFont.truetype("/common/font/SIMLI.TTF", 25)
         draw = ImageDraw.Draw(img)

@@ -20,5 +20,8 @@ from bbs import views
 urlpatterns = [
     path('login/', views.user_login, name="login"),
     path('logout/', views.user_logout, name="logout"),
+    path('register/', views.user_register, name="register"),
+    path('userinfo/', views.user_info, name="user_info"),
+    path('register/validcode/', views.send_register_code, name="register_code"),
     path('', views.index, name="index"),
 ]

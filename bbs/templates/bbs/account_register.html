@@ -12,18 +12,24 @@
             padding: 2px;
         }
 
-        .login-wrap {
+        .register-wrap {
             min-height: 450px;
-            width: 340px;
+            width: 550px;
             padding: 50px 30px 100px;
             overflow: hidden;
             background: #f5e8cb;
             margin: auto;
         }
 
-        #inputValid {
+        #inputEmail {
             display: inline;
-            width: 150px
+            width: 65%;
+        }
+        #validCode{
+            width: 30%;
+        }
+        .error-msg{
+            color:red;
         }
     </style>
 {% endblock %}
@@ -43,99 +49,158 @@
                         </svg>
                     </a>
                 </div>
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <ul style="margin-right: 15px" class="nav navbar-nav navbar-right">
-                        <li><a role="button" href="{% url "register" %}">注册</a></li>
-                    </ul>
-                </div><!-- /.navbar-collapse -->
 
             </div>
         </nav>
     </div>
 
-    <div class="login-wrap">
+    <div class="register-wrap form-horizontal">
         {% csrf_token %}
         <div class="form-group">
-            <span style="color: red" id="loginMsg">&nbsp;</span>
+            <label for="inputUsername" class="col-sm-2 control-label">用户名</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="inputUsername" placeholder="用户名">
+                <span class="error-msg"></span>
+            </div>
         </div>
+
         <div class="form-group">
-            <input type="text" class="form-control" id="inputUsername" placeholder="邮箱/用户名/手机号">
+            <label for="inputEmail" class="col-sm-2 control-label">邮箱</label>
+            <div class="col-sm-10">
+                <input type="email" class="form-control" id="inputEmail" placeholder="邮箱">
+                <button id="validCode" style="display: inline" class="btn btn-success">发送验证码</button>
+                <span class="error-msg"></span>
+            </div>
         </div>
+
         <div class="form-group">
-            <input type="password" class="form-control" id="inputPassword1" placeholder="密码">
+            <label for="inputValid" class="col-sm-2 control-label">验证码</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="inputValid" placeholder="验证码">
+                <span class="error-msg"></span>
+            </div>
         </div>
+
         <div class="form-group">
-            <input type="text" class="form-control" id="inputValid" placeholder="验证码">
-            <img onclick="getValidCode(this)" style="display: inline;margin: 0 13px" src="/validcode/">
+            <label for="inputPassword" class="col-sm-2 control-label">密码</label>
+            <div class="col-sm-10">
+                <input type="password" class="form-control" id="inputPassword" placeholder="密码">
+                <span class="error-msg"></span>
+            </div>
         </div>
-        <div class="checkbox">
-            <label>
-                <input id="inputKeepLogin" type="checkbox">下次自动登录
-            </label>
-        </div>
+
         <div class="form-group">
-            <button style="width: 100%" type="button" id="btnSubmit" class="btn btn-success">登录</button>
+            <label for="inputConfirmPassword" class="col-sm-2 control-label">确认密码</label>
+            <div class="col-sm-10">
+                <input type="password" class="form-control" id="inputConfirmPassword" placeholder="确认密码">
+                <span class="error-msg"></span>
+            </div>
         </div>
+
+        <div class="form-group">
+            <div class="col-sm-offset-4  col-sm-5">
+                <button id="register" class="form-control btn btn-success">注册</button>
+            </div>
+        </div>
+
     </div>
 
-    {% block js %}
-        <script type="text/javascript">
-            $(function () {
-                $("#btnSubmit").click(login);
+    <script type="text/javascript">
+        $(function () {
+            $("#register").click(function () {
+                register();
             });
+            $("#validCode").click(function () {
+                sendValidCode();
+            });
+        });
 
-            function login() {
-                $("#loginMsg").text(" ");
-                var csrfToken = $("[name='csrfmiddlewaretoken']")[0].value;
-                var username = $("#inputUsername").val();
-                var password = $("#inputPassword1").val();
-                var validCode = $("#inputValid").val();
-                var keepLogin = $("#inputKeepLogin").prop("checked");
-                var type = "username";
-                if (username && password && validCode) {
-                    if (/^\d{11}$/.test(username)) {
-                        type = "mobail";
-                    } else if (/^[a-zA-Z0-9]\w+@[a-zA-Z0-9]+.(com|cn|net|com.cn)$/.test(username)) {
-                        type = "email";
-                    }
-                    $.ajax({
-                        url: "{% url "login" %}?next={{ next_page }}",
-                        method: "post",
-                        data: {
-                            "type": type,
-                            "username": username,
-                            "password": password,
-                            "validCode": validCode,
-                            "keepLogin": keepLogin,
-                            "csrfmiddlewaretoken": csrfToken,
-                        },
-                        dataType: "json",
-                        success: function (res) {
-                            if (res["status"] == false) {
-                                $("#loginMsg").text(res["msg"]);
-                                $("#inputValid").next().click();
-                            } else {
-                                if (res["next"]) {
-                                    window.location.href = res["next"];
-                                } else {
-                                    window.location.href = "{% url "index" %}";
-                                }
-                            }
+        function register() {
+            $("div.form-group span").each(function (i,ele) {
+                $(ele).text("");
+            });
+            var csrfToken = $("input[name='csrfmiddlewaretoken']").val()
+            var username = $("#inputUsername").val();
+            var email = $("#inputEmail").val();
+            var valid = $("#inputValid").val();
+            var password = $("#inputPassword").val();
+            var confirmPassword = $("#inputConfirmPassword").val();
+            if(username==""){
+                showErrorMsg($("#inputUsername").nextAll("span"),"请输入用户名");
+            }else if(!/^[a-zA-Z0-9]\w+@[a-zA-Z0-9]+.(com|cn|net|com.cn)$/.test(email)){
+                showErrorMsg($("#inputEmail").nextAll("span"),"请输入正确的邮箱");
+            }else if(valid==""){
+                showErrorMsg($("#inputValid").nextAll("span"),"请输入验证码");
+            }else if(password==""){
+                showErrorMsg($("#inputPassword").nextAll("span"),"请输入密码");
+            }else if(password.length<6){
+                showErrorMsg($("#inputPassword").nextAll("span"),"密码必须大于等于6位");
+            } else if(password!=confirmPassword){
+                showErrorMsg($("#inputConfirmPassword").nextAll("span"),"两次输入密码不一致");
+            }else{
+                $.ajax({
+                    url: "{% url "register" %}",
+                    method: "POST",
+                    data: {
+                        "csrfmiddlewaretoken": csrfToken,
+                        "username": username,
+                        "password": password,
+                        "confirmPassword": confirmPassword,
+                        "email": email,
+                        "valid": valid,
+                    },
+                    dataType: "json",
+                    success:function (res) {
+                        console.log(res);
+                        if(res["status"]){
+                            window.location.href=res["msg"];
+                        }else {
+                            showErrorMsg($("#input"+res["error_code"]).nextAll("span"),res["msg"]);
                         }
-                    });
-                } else {
-                    $("#loginMsg").text("请输入登录信息");
-                }
+                    }
+                });
             }
+        }
 
-            function getValidCode(ele) {
-                var t = Math.floor(Math.random() * 100);
-                console.log(t);
-                $(ele).attr("src", "{% url "valid" %}?t=" + t);
+        function sendValidCode() {
+            var email = $("#inputEmail").val();
+            $("#inputEmail").nextAll("span").text("");
+            if(!/^[a-zA-Z0-9]\w+@[a-zA-Z0-9]+.(com|cn|net|com.cn)$/.test(email)){
+                showErrorMsg($("#inputEmail").nextAll("span"),"请输入正确的邮箱");
+            }else{
+                $.ajax({
+                    url:"{% url "register_code" %}",
+                    method:"GET",
+                    data:{"email":email},
+                    dataType:'json',
+                    success:function (res) {
+                        if(res["status"]){
+                            $("#validCode").attr("disabled", "true");
+                            var times = 60;
+                            var timer = setInterval(function () {
+                                times -= 1;
+                                if(times<=0){
+                                    clearInterval(timer);
+                                    $("#validCode").text("发送验证码");
+                                    $("#validCode").removeAttr("disabled");
+                                }else{
+                                    $("#validCode").text("请在"+times+"秒后重试");
+                                }
+                            },1000);
+                        }else{
+                            showErrorMsg($("#input"+res["error_code"]).nextAll("span"),res["msg"]);
+                        }
+                    },
+                });
             }
+        }
 
-        </script>
-    {% endblock %}
+
+        function showErrorMsg(ele,msg) {
+            ele.text(msg);
+        }
+
+    </script>
 
 
 {% endblock %}
