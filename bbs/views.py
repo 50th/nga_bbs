@@ -2,7 +2,7 @@ from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.conf import settings
 from bbs_models import models
 import json
-from common import valid_code, email_handler
+from common import valid_code, email_handler, md5handler
 
 
 def login_reqiure(func):
@@ -29,7 +29,8 @@ def index(request):
         username = request.session.get("username")
         password = request.session.get("password")
         user = models.UserProfile.objects.filter(username=username, password=password).first()
-    return render(request, "index.html", {"user": user})
+    forum_list = models.Forum.objects.all()
+    return render(request, "bbs/index.html", {"user": user, "forum_list": forum_list})
 
 
 def user_login(request):
@@ -44,7 +45,7 @@ def user_login(request):
         keep_login = request.POST.get("keepLogin")  # 保持登录
         login_msg = {}
         if code == request.session["valid_code"]:
-            password = md5_convert(password, settings.PASSWORD_SALT)
+            password = md5handler.md5_convert(password, settings.PASSWORD_SALT)
             if username_type == "email":
                 user = models.UserProfile.objects.filter(email=username, password=password).first()
             elif username_type == "mobail":
@@ -132,7 +133,7 @@ def user_register(request):
             res_msg["msg"] = "两次密码不一致"
         else:
             salt = settings.PASSWORD_SALT
-            password = md5_convert(password, salt)
+            password = md5handler.md5_convert(password, salt)
             user = models.UserProfile.objects.create(username=username, password=password, email=email)
             user.save()
             request.session["username"] = user.username
@@ -174,15 +175,3 @@ def send_register_code(request):
         #     res_msg["error_code"] = "e"
         #     res_msg["msg"] = "请确认邮箱地址"
     return HttpResponse(json.dumps(res_msg))
-
-
-def md5_convert(source, salt=None):
-    import hashlib
-    md5 = hashlib.md5()
-    if salt:
-        md5.update((source+salt).encode("utf-8"))
-    else:
-        md5.update(source.encode("utf-8"))
-    r = md5.hexdigest()
-    print(r)
-    return r

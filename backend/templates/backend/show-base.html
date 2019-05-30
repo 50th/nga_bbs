@@ -11,17 +11,22 @@
         .container-fluid {
             padding: 2px;
         }
+
     </style>
+    {% block extra-css %}
+    {% endblock %}
+
 {% endblock %}
+
 
 
 {% block body %}
 
-    <nav style="background-color: #f5e8cb" class="navbar-fixed-top navbar navbar-default">
+    <nav style="background-color: #f5e8cb" class="navbar navbar-default">
         <div class="container-fluid">
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="navbar-header">
-                <a class="navbar-brand" href="{% url "index" %}">
+                <a class="navbar-brand" href="{% url "backend:index" %}">
                     <svg xmlns="http://www.w3.org/2000/svg" style="height:50px;fill:#591804"
                          viewBox="129.22 30.208 1120.58 411.795">
                         <path fill-rule="evenodd"
@@ -65,10 +70,9 @@
         </div><!-- /.container-fluid -->
     </nav>
 
-    <div style="margin: auto" class="page-header">
-        <img style="max-height: 100%;max-width: 100%"
-             src="/static/image/background-img/a6d85e4bd11373f06dcfd0f0a80f4bfbfaed040d.jpg">
-    </div>
+    {% block content-body %}
+    {% endblock %}
+
 
 
 

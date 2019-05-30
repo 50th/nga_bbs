@@ -1,0 +1,113 @@
+{% extends "backend/show-base.html" %}
+
+{% block extra-css %}
+    <style type="text/css">
+        .content-body {
+            width: 50%;
+
+            margin: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block content-body %}
+    {% csrf_token %}
+    <div class="content-body">
+        <table class="table table-bordered">
+            <p>
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addForumModal">添加板块
+                </button>
+            </p>
+            <thead>
+            <tr>
+                {% for f in forum_fields %}
+                    <th>{{ f.name }}</th>
+                {% endfor %}
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for f in forum_list %}
+                <tr>
+                    {% for v in f %}
+                        <td>{{ v }}</td>
+                    {% endfor %}
+                    <td>
+                        <a class="btn btn-info btn-xs">修改</a>
+                        <a class="btn btn-danger btn-xs">删除</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="addForumModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">添加板块</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inputName">板块名</label>
+                        <input type="text" class="form-control" id="inputName" placeholder="板块名">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputDescription">简介</label>
+                        <textarea class="form-control" id="inputDescription" placeholder="简介"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <span style="color: red" id="addErrorMsg"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-success" id="btnAddForum">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $(function () {
+            $('#addForumModal').on('hidden.bs.modal', function (e) {
+                $("#inputName").val("");
+                $("#inputDescription").val("");
+                $("#addErrorMsg").text("");
+            });
+            $("#btnAddForum").click(function () {
+                addForum();
+            });
+        });
+
+        function addForum() {
+            var name = $("#inputName").val();
+            var description = $("#inputDescription").val();
+            var csrfToken = $("input[name='csrfmiddlewaretoken']").val();
+            if (name && description) {
+                $.ajax({
+                    url: "{% url "backend:forum" %}",
+                    method: "post",
+                    data: {"name": name, "description": description, "csrfmiddlewaretoken": csrfToken},
+                    dataType: "json",
+                    success: function (res) {
+                        if (res["status"]) {
+                            window.location.reload();
+                        } else {
+                            $("#addErrorMsg").text(res["msg"]);
+                        }
+                    },
+                });
+            } else {
+                $("#addErrorMsg").text("内容不能为空");
+            }
+        }
+
+    </script>
+
+{% endblock %}
