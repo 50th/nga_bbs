@@ -65,10 +65,10 @@ class Topic(models.Model):
     """帖子表"""
     title = models.CharField(max_length=64)
     content = models.TextField()
-    summary = models.CharField(max_length=64)
     image = models.ImageField(null=True, blank=True)
     open_date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey("UserProfile", related_name="open_user", on_delete=models.DO_NOTHING)
+    forum = models.ForeignKey("Forum", on_delete=models.DO_NOTHING, default=1)
     editor = models.ManyToManyField("UserProfile", related_name="editor", blank=True)
 
     class Meta:

@@ -43,7 +43,7 @@
 
         <div class="content-top">
             <div class="top-left left"><span><a href="{% url "bbs:forum" forum_id %}" class="btn btn-info">{{ forum_obj.name }}</a></span></div>
-            <div class="top-right right"><span><a href="{% url "bbs:topic" %}" class="btn btn-success">发表新帖</a></span></div>
+            <div class="top-right right"><span><a href="{% url "bbs:topic" forum_id %}" class="btn btn-success">发表新帖</a></span></div>
         </div>
 
         <div>

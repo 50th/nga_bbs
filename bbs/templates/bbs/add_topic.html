@@ -32,7 +32,7 @@
 
     <div class="forums-content">
         <div class="content-top">
-            <span><a href="{% url "bbs:topic" %}" class="btn btn-info">发表新帖</a></span>
+            <span><a href="{% url "bbs:topic" forum_id %}" class="btn btn-info">发表新帖</a></span>
         </div>
 
         <div class="editor-wrap">
@@ -97,7 +97,7 @@
             var content = editor.txt.html();
             if (title && content) {
                 $.ajax({
-                    url: "{% url "bbs:topic" %}",
+                    url: "{% url "bbs:topic" forum_id %}",
                     method: "post",
                     data: {
                         "csrfmiddlewaretoken": csrfToken,
@@ -107,7 +107,7 @@
                     dataType: "json",
                     success: function (res) {
                         if(res["status"]){
-                            window.location.href = {% url "bbs:forum" %}
+                            window.location.href = "{% url "bbs:forum" forum_id %}";
                         }else{
                             alert("标题和内容不能为空");
                         }

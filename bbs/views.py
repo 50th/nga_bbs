@@ -8,7 +8,7 @@ from common import valid_code, email_handler, md5handler
 
 def login_reqiure(func):
     def inner(*args, **kwargs):
-        request = args[0]
+        request = args[1] if isinstance(args[0], View) else args[0]
         username = request.COOKIES.get("username")
         password = request.COOKIES.get("password")
         user = models.UserProfile.objects.filter(username=username, password=password).first()
@@ -18,6 +18,8 @@ def login_reqiure(func):
             user = models.UserProfile.objects.filter(username=username, password=password).first()
         if not user:
             return redirect("bbs:login")
+        request.session["username"] = user.username
+        request.session["password"] = user.password
         return func(*args, **kwargs)
     return inner
 
@@ -184,47 +186,48 @@ def forums(request, *args, **kwargs):
         print(page)
         user_obj = get_user_obj(request)
         forum_list = models.Forum.objects.all()
+        topic_list = models.Topic.objects.values("title", "open_date", "user")
+        print(topic_list)
         return render(request, "bbs/forums.html", locals())
     else:
         return redirect("bbs:index")
 
 
-class TopicView(View):
-    def get(self, request, *args, **kwargs):
-        topic_id = kwargs.get("topic_id")
-        topic_obj = models.Topic.objects.filter(id=topic_id).first()
-        print(topic_id)
-        forum_list = models.Forum.objects.all()
-        if topic_obj:
-            page = request.GET.get("page")
-            if page:
-                page = int(page) if page.isdecimal() else 1
-            else:
-                page = 1
-            pass
-        elif topic_id:
-            return redirect("bbs:index")
+def get_topic(request, *args, **kwargs):
+    topic_id = kwargs.get("topic_id")
+    topic_obj = models.Topic.objects.filter(id=topic_id).first()
+    forum_id = kwargs.get("forum_id")
+    forum_list = models.Forum.objects.all()
+    if topic_obj:
+        page = request.GET.get("page")
+        if page:
+            page = int(page) if page.isdecimal() else 1
         else:
-            username = request.COOKIES.get("username")
-            password = request.COOKIES.get("password")
-            user = models.UserProfile.objects.filter(username=username, password=password).first()
-            if not user:
-                username = request.session.get("username")
-                password = request.session.get("password")
-                user = models.UserProfile.objects.filter(username=username, password=password).first()
-            if not user:
-                url = reverse("bbs:login") + "?next=" + reverse("bbs:topic")
-                return redirect(url)
-            return render(request, "bbs/add_topic.html", {"user_obj": user, "forum_list": forum_list})
+            page = 1
+        pass
+    else:
+        return redirect("bbs:forum",permanent=True, **{"forum_id":forum_id})
+
+
+class TopicView(View):
+    @login_reqiure
+    def get(self, request, *args, **kwargs):
+        forum_id = kwargs.get("forum_id")
+        forum_list = models.Forum.objects.all()
+        user = get_user_obj(request)
+        return render(request, "bbs/add_topic.html", {"user_obj": user, "forum_list": forum_list, "forum_id": forum_id})
 
     @login_reqiure
-    def post(self,request):
+    def post(self, request, *args, **kwargs):
         res_msg={"status": False}
         title = request.POST.get("title")
         content = request.POST.get("content")
         if title and content:
+            forum_id = kwargs.get("forum_id")
+            user = get_user_obj(request)
+            topic_obj = models.Topic.objects.create(title=title, content=content, user=user, forum_id=forum_id)
+            topic_obj.save()
             res_msg["status"] = True
-            print(title,content)
         return HttpResponse(json.dumps(res_msg))
 
 
