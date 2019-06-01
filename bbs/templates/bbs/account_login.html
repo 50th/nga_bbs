@@ -34,7 +34,7 @@
             <div class="container-fluid">
 
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="{% url "index" %}">
+                    <a class="navbar-brand" href="{% url "bbs:index" %}">
                         <svg xmlns="http://www.w3.org/2000/svg" style="height:50px;fill:#591804"
                              viewBox="129.22 30.208 1120.58 411.795">
                             <path fill-rule="evenodd"
@@ -45,7 +45,7 @@
                 </div>
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul style="margin-right: 15px" class="nav navbar-nav navbar-right">
-                        <li><a role="button" href="{% url "register" %}">注册</a></li>
+                        <li><a role="button" href="{% url "bbs:register" %}">注册</a></li>
                     </ul>
                 </div><!-- /.navbar-collapse -->
 
@@ -99,7 +99,7 @@
                         type = "email";
                     }
                     $.ajax({
-                        url: "{% url "login" %}?next={{ next_page }}",
+                        url: "{% url "bbs:login" %}?next={{ next_page }}",
                         method: "post",
                         data: {
                             "type": type,
@@ -118,7 +118,7 @@
                                 if (res["next"]) {
                                     window.location.href = res["next"];
                                 } else {
-                                    window.location.href = "{% url "index" %}";
+                                    window.location.href = "{% url "bbs:index" %}";
                                 }
                             }
                         }

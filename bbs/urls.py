@@ -13,15 +13,19 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
+from django.urls import path, re_path
 from bbs import views
 
 
+app_name = "bbs"
 urlpatterns = [
     path('login/', views.user_login, name="login"),
     path('logout/', views.user_logout, name="logout"),
     path('register/', views.user_register, name="register"),
     path('userinfo/', views.user_info, name="user_info"),
     path('register/validcode/', views.send_register_code, name="register_code"),
+    re_path('(?P<forum_id>\d+)$', views.forums, name="forum"),
+    re_path('topic/(?P<topic_id>\d+)$', views.TopicView.as_view(), name="topic"),
+    re_path('topic/$', views.TopicView.as_view(), name="topic"),
     path('', views.index, name="index"),
 ]

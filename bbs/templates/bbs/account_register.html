@@ -40,7 +40,7 @@
             <div class="container-fluid">
 
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="{% url "index" %}">
+                    <a class="navbar-brand" href="{% url "bbs:index" %}">
                         <svg xmlns="http://www.w3.org/2000/svg" style="height:50px;fill:#591804"
                              viewBox="129.22 30.208 1120.58 411.795">
                             <path fill-rule="evenodd"
@@ -139,7 +139,7 @@
                 showErrorMsg($("#inputConfirmPassword").nextAll("span"),"两次输入密码不一致");
             }else{
                 $.ajax({
-                    url: "{% url "register" %}",
+                    url: "{% url "bbs:register" %}",
                     method: "POST",
                     data: {
                         "csrfmiddlewaretoken": csrfToken,
@@ -169,7 +169,7 @@
                 showErrorMsg($("#inputEmail").nextAll("span"),"请输入正确的邮箱");
             }else{
                 $.ajax({
-                    url:"{% url "register_code" %}",
+                    url:"{% url "bbs:register_code" %}",
                     method:"GET",
                     data:{"email":email},
                     dataType:'json',

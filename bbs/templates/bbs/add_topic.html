@@ -1,0 +1,122 @@
+{% extends "index.html" %}
+
+{% block extra-css %}
+    <style type="text/css">
+        .forums-content {
+            margin: 0px 30px 8px 30px;
+        }
+
+        .content-top {
+            margin: 0 0 8px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0px 15px;
+        }
+
+        table > tbody > tr > td > div > span {
+            width: 100px;
+            margin: 0px 5px;
+        }
+
+        .editor-wrap {
+
+        }
+
+    </style>
+{% endblock %}
+
+{% block content-body %}
+
+    <div class="forums-content">
+        <div class="content-top">
+            <span><a href="{% url "bbs:topic" %}" class="btn btn-info">发表新帖</a></span>
+        </div>
+
+        <div class="editor-wrap">
+            <table>
+                <tbody>
+                <tr>
+                    <td>
+                        <div><input id="inputTitle" class="form-control" type="text"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {% csrf_token %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="editor"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center">
+                        <div><span id="clearEditor" class="btn btn-danger">清空</span><span id="submitTopic"
+                                                                                          class="btn btn-success">提交</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block extra-js %}
+    <script type="text/javascript" src="/static/plugins/wangEditor-3.1.1/wangEditor.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var editor = ceratEditor();
+
+            $("#clearEditor").click(function () {
+                editor.txt.clear();
+            });
+            $("#submitTopic").click(function () {
+                submitTopic(editor);
+            });
+        });
+
+        function ceratEditor() {
+            var E = window.wangEditor;
+            var editor = new E('#editor');
+            editor.customConfig.uploadImgServer = '/upload';
+            editor.create();
+            return editor;
+        }
+
+        function submitTopic(editor) {
+            var csrfToken = $("input[name='csrfmiddlewaretoken']").val();
+            var title = $("#inputTitle").val();
+            var content = editor.txt.html();
+            if (title && content) {
+                $.ajax({
+                    url: "{% url "bbs:topic" %}",
+                    method: "post",
+                    data: {
+                        "csrfmiddlewaretoken": csrfToken,
+                        "title": title,
+                        "content": content,
+                    },
+                    dataType: "json",
+                    success: function (res) {
+                        if(res["status"]){
+                            window.location.href = {% url "bbs:forum" %}
+                        }else{
+                            alert("标题和内容不能为空");
+                        }
+                    },
+                });
+            }else{
+                alert("标题和内容不能为空");
+            }
+        }
+
+    </script>
+{% endblock %}

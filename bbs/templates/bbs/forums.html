@@ -1,0 +1,65 @@
+{% extends "index.html" %}
+
+{% block extra-css %}
+    <style type="text/css">
+        .forums-content {
+            margin: 0px 30px 8px 30px;
+        }
+
+        .table, .top-right, .top-left {
+            box-shadow: 0 0 5px -3px #000;
+            margin: 0 0 8px 0;
+            background-color: #fffcee;
+        }
+
+        .table > tbody > tr > td {
+            border: 0px;
+        }
+
+        td.c1 {
+            width: 5%;
+        }
+
+        td.c3 {
+            width: 14%;
+        }
+
+        td.c4 {
+            width: 14%;
+        }
+
+        .left{
+            float: left;
+        }
+        .right{
+            float: right;
+        }
+    </style>
+{% endblock %}
+
+{% block content-body %}
+
+    <div class="forums-content">
+
+        <div class="content-top">
+            <div class="top-left left"><span><a href="{% url "bbs:forum" forum_id %}" class="btn btn-info">{{ forum_obj.name }}</a></span></div>
+            <div class="top-right right"><span><a href="{% url "bbs:topic" %}" class="btn btn-success">发表新帖</a></span></div>
+        </div>
+
+        <div>
+            <table rules="none" class="table">
+                <tbody>
+                <tr>
+                    <td class="c1">评论数</td>
+                    <td class="c2">标题</td>
+                    <td class="c3">发帖时间</td>
+                    <td class="c4">最后回复时间</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+
+{% endblock %}

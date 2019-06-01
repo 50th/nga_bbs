@@ -1,4 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect, reverse
+from django.views import View
 from django.conf import settings
 from bbs_models import models
 import json
@@ -16,27 +17,21 @@ def login_reqiure(func):
             password = request.session.get("password")
             user = models.UserProfile.objects.filter(username=username, password=password).first()
         if not user:
-            return redirect("login")
+            return redirect("bbs:login")
         return func(*args, **kwargs)
     return inner
 
 
 def index(request):
-    username = request.COOKIES.get("username")
-    password = request.COOKIES.get("password")
-    user = models.UserProfile.objects.filter(username=username, password=password).first()
-    if not user:
-        username = request.session.get("username")
-        password = request.session.get("password")
-        user = models.UserProfile.objects.filter(username=username, password=password).first()
+    user_obj = get_user_obj(request)
     forum_list = models.Forum.objects.all()
-    return render(request, "bbs/index.html", {"user": user, "forum_list": forum_list})
+    return render(request, "bbs/index.html", {"user_obj": user_obj, "forum_list": forum_list})
 
 
 def user_login(request):
     next_page = request.GET.get("next")  # 获取登录成功后的跳转页
     if not next_page:  # 如果没有，默认为到首页
-        next_page = reverse("index")
+        next_page = reverse("bbs:index")
     if request.method == "POST":
         username_type = request.POST.get("type")  # 用户输入的用户名类型，email，phone，用户名
         username = request.POST.get("username")
@@ -175,3 +170,70 @@ def send_register_code(request):
         #     res_msg["error_code"] = "e"
         #     res_msg["msg"] = "请确认邮箱地址"
     return HttpResponse(json.dumps(res_msg))
+
+
+def forums(request, *args, **kwargs):
+    forum_id = kwargs.get("forum_id")
+    forum_obj = models.Forum.objects.filter(id=forum_id).first()
+    if forum_obj:
+        page = request.GET.get("page")
+        if page:
+            page = int(page) if page.isdecimal() else 1
+        else:
+            page = 1
+        print(page)
+        user_obj = get_user_obj(request)
+        forum_list = models.Forum.objects.all()
+        return render(request, "bbs/forums.html", locals())
+    else:
+        return redirect("bbs:index")
+
+
+class TopicView(View):
+    def get(self, request, *args, **kwargs):
+        topic_id = kwargs.get("topic_id")
+        topic_obj = models.Topic.objects.filter(id=topic_id).first()
+        print(topic_id)
+        forum_list = models.Forum.objects.all()
+        if topic_obj:
+            page = request.GET.get("page")
+            if page:
+                page = int(page) if page.isdecimal() else 1
+            else:
+                page = 1
+            pass
+        elif topic_id:
+            return redirect("bbs:index")
+        else:
+            username = request.COOKIES.get("username")
+            password = request.COOKIES.get("password")
+            user = models.UserProfile.objects.filter(username=username, password=password).first()
+            if not user:
+                username = request.session.get("username")
+                password = request.session.get("password")
+                user = models.UserProfile.objects.filter(username=username, password=password).first()
+            if not user:
+                url = reverse("bbs:login") + "?next=" + reverse("bbs:topic")
+                return redirect(url)
+            return render(request, "bbs/add_topic.html", {"user_obj": user, "forum_list": forum_list})
+
+    @login_reqiure
+    def post(self,request):
+        res_msg={"status": False}
+        title = request.POST.get("title")
+        content = request.POST.get("content")
+        if title and content:
+            res_msg["status"] = True
+            print(title,content)
+        return HttpResponse(json.dumps(res_msg))
+
+
+def get_user_obj(request):
+    username = request.COOKIES.get("username")
+    password = request.COOKIES.get("password")
+    user = models.UserProfile.objects.filter(username=username, password=password).first()
+    if not user:
+        username = request.session.get("username")
+        password = request.session.get("password")
+        user = models.UserProfile.objects.filter(username=username, password=password).first()
+    return user
