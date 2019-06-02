@@ -1,6 +1,8 @@
 {% extends "index.html" %}
+{% load my_tags %}
 
 {% block extra-css %}
+
     <style type="text/css">
         .forums-content {
             margin: 0px 30px 8px 30px;
@@ -20,18 +22,19 @@
             width: 5%;
         }
 
-        td.c3 {
-            width: 14%;
+        td.c4, td.c6 {
+            width: 11%;
         }
 
-        td.c4 {
-            width: 14%;
+        td.c3,td.c5 {
+            width: 4%;
         }
 
-        .left{
+        .left {
             float: left;
         }
-        .right{
+
+        .right {
             float: right;
         }
     </style>
@@ -42,8 +45,10 @@
     <div class="forums-content">
 
         <div class="content-top">
-            <div class="top-left left"><span><a href="{% url "bbs:forum" forum_id %}" class="btn btn-info">{{ forum_obj.name }}</a></span></div>
-            <div class="top-right right"><span><a href="{% url "bbs:topic" forum_id %}" class="btn btn-success">发表新帖</a></span></div>
+            <div class="top-left left"><span><a href="{% url "bbs:forum" forum_id %}"
+                                                class="btn btn-info">{{ forum_obj.name }}</a></span></div>
+            <div class="top-right right"><span><a href="{% url "bbs:topic" forum_id %}" class="btn btn-success">发表新帖</a></span>
+            </div>
         </div>
 
         <div>
@@ -52,9 +57,26 @@
                 <tr>
                     <td class="c1">评论数</td>
                     <td class="c2">标题</td>
-                    <td class="c3">发帖时间</td>
-                    <td class="c4">最后回复时间</td>
+                    <td class="c3">发帖人</td>
+                    <td class="c4">发帖时间</td>
+                    <td class="c5">回复人</td>
+                    <td class="c6">回复时间</td>
                 </tr>
+                {% for t in topic_list %}
+                    <tr>
+                        <td class="c1"><a href="{% url "bbs:topic" forum_id t.id %}">{{ t.comment_count }}</a></td>
+                        <td class="c2"><a href="{% url "bbs:topic" forum_id t.id %}">{{ t.title }}</a></td>
+                        <td class="c3">{{ t.user.username }}</td>
+                        <td class="c4">{% convert_date t.open_date %}</td>
+                        {% if t.comment_user %}
+                            <td class="c5">{{ t.comment_user }}</td>
+                            <td class="c6">{% convert_date t.comment_date %}</td>
+                        {% else %}
+                            <td class="c5">{{ t.user.username }}</td>
+                            <td class="c6">{% convert_date t.open_date %}</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>

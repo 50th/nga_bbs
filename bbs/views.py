@@ -1,4 +1,6 @@
 from django.shortcuts import render, HttpResponse, redirect, reverse
+from django.utils.safestring import mark_safe
+from django.db.models import F
 from django.views import View
 from django.conf import settings
 from bbs_models import models
@@ -85,7 +87,7 @@ def user_login(request):
 @login_reqiure
 def user_logout(request):
     request.session.flush()
-    re = redirect("index")
+    re = redirect("bbs:index")
     re.delete_cookie("username")
     re.delete_cookie("password")
     return re
@@ -183,11 +185,16 @@ def forums(request, *args, **kwargs):
             page = int(page) if page.isdecimal() else 1
         else:
             page = 1
-        print(page)
         user_obj = get_user_obj(request)
         forum_list = models.Forum.objects.all()
-        topic_list = models.Topic.objects.values("title", "open_date", "user")
-        print(topic_list)
+        topic_list = models.Topic.objects.filter(forum_id=forum_id).extra(
+            select={
+                "comment_count": "select count(*) from comment where topic_id=%s",
+                "comment_user": "select from_user_id from comment where topic_id=%s order by comment_date desc limit 1",
+                "comment_date": "select comment_date from comment where topic_id=%s order by comment_date desc limit 1",
+            },
+            select_params=(F("id"), F("id"), F("id"))
+        ).order_by("-open_date")
         return render(request, "bbs/forums.html", locals())
     else:
         return redirect("bbs:index")
@@ -199,14 +206,16 @@ def get_topic(request, *args, **kwargs):
     forum_id = kwargs.get("forum_id")
     forum_list = models.Forum.objects.all()
     if topic_obj:
+        user_obj = get_user_obj(request)
         page = request.GET.get("page")
         if page:
             page = int(page) if page.isdecimal() else 1
         else:
             page = 1
-        pass
+        content = mark_safe(topic_obj.content)
+        return render(request, "bbs/topic.html", locals())
     else:
-        return redirect("bbs:forum",permanent=True, **{"forum_id":forum_id})
+        return redirect("bbs:forum", permanent=True, **{"forum_id": forum_id})
 
 
 class TopicView(View):

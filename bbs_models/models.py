@@ -96,6 +96,7 @@ class Comment(models.Model):
     parent_comment = models.OneToOneField("Comment", on_delete=models.DO_NOTHING, null=True, blank=True)
     content = models.TextField()
     from_user = models.ForeignKey("UserProfile", on_delete=models.DO_NOTHING)
+    comment_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "comment"

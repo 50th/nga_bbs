@@ -24,8 +24,9 @@ urlpatterns = [
     path('register/', views.user_register, name="register"),
     path('userinfo/', views.user_info, name="user_info"),
     path('register/validcode/', views.send_register_code, name="register_code"),
-    re_path('(?P<forum_id>\d+)$', views.forums, name="forum"),
     re_path('(?P<forum_id>\d+)/(?P<topic_id>\d+)$', views.get_topic, name="topic"),
+    re_path('(?P<forum_id>\d+)$', views.forums, name="forum"),
+
     re_path('(?P<forum_id>\d+)/topic/$', views.TopicView.as_view(), name="topic"),
     path('', views.index, name="index"),
 ]
