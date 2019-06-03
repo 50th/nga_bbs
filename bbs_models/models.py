@@ -69,6 +69,7 @@ class Topic(models.Model):
     open_date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey("UserProfile", related_name="open_user", on_delete=models.DO_NOTHING)
     forum = models.ForeignKey("Forum", on_delete=models.DO_NOTHING, default=1)
+    floor_count = models.IntegerField(default=0)
     editor = models.ManyToManyField("UserProfile", related_name="editor", blank=True)
 
     class Meta:
@@ -96,6 +97,7 @@ class Comment(models.Model):
     parent_comment = models.OneToOneField("Comment", on_delete=models.DO_NOTHING, null=True, blank=True)
     content = models.TextField()
     from_user = models.ForeignKey("UserProfile", on_delete=models.DO_NOTHING)
+    floor = models.IntegerField()
     comment_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:

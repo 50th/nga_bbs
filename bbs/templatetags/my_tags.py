@@ -16,3 +16,14 @@ def convert_date(sourse_date):
         return sourse_date.strftime("%Y-%m-%d %H:%M:%S")
     else:
         return "%s分钟前" % int(c.seconds/60)
+
+
+# @register.simple_tag
+# def comment_div(comment):
+#     res = ""
+#     p = comment.parent_comment
+#     while p:
+#         temp = "<div>%s</div>" % p.content
+#         res = temp + res
+#         p = p.parent_comment
+#     return mark_safe(res)

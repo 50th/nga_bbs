@@ -1,10 +1,190 @@
 {% extends "bbs/index.html" %}
+{% load my_tags %}
+
+{% block extra-css %}
+    <style type="text/css">
+        .content-body, .content-foot {
+            margin: 0px 30px 8px 30px;
+        }
+
+        .table, .top-right, .top-left {
+            box-shadow: 0 0 5px -3px #000;
+            margin: 0 0px 8px 0px;
+            background-color: #fffcee;
+        }
+
+        .editor-wrap>table>tbody>tr>td{
+            border: 0px;
+        }
+
+        td.c1 {
+            width: 15%;
+        }
+
+        .left {
+            float: left;
+            margin: 0 10px 8px 10px;
+        }
+
+        .right {
+            float: right;
+            margin: 0 10px 8px 10px;
+        }
+
+        #clearEditor, #submitComment {
+            width: 100px;
+            margin: 0px 5px;
+        }
+
+        #inputComment {
+            background-color: #fffcee;
+            min-height: 100px;
+        }
+
+        .well {
+            margin-bottom: 0px;
+            background-color: #fffcee;
+        }
+
+    </style>
+{% endblock %}
 
 {% block content-body %}
-    <div>{{ topic_obj.title }}</div>
-    <div>
-    {{ content }}
+
+    <div class="content-body">
+
+        <div class="content-top">
+            <div class="top-left left"><span><a href="{% url "bbs:forum" forum_id %}"
+                                                class="btn btn-info">{{ forum_obj.name }}</a></span></div>
+            <div class="top-left left"><span><a href="{% url "bbs:topic" forum_id topic_id %}"
+                                                class="btn btn-info">{{ topic_obj.title }}</a></span></div>
+            <div class="top-right right"><span><a topicId="{{ topic_id }}" name="intoComment" class="btn btn-success">发表评论</a></span>
+            </div>
+        </div>
+
+        <div>
+            <table rules="none" class="table">
+                <tbody>
+                <tr>
+                    <td class="c1"><a>{{ user_obj.username }}</a></td>
+                    <td class="c2">{{ content }}</td>
+
+                </tr>
+                </tbody>
+            </table>
+            <table class="table">
+                <tbody>
+                {% for c in comment_list %}
+                    <tr>
+                        <td class="c1"><a>{{ c.from_user.username }}</a><span class="right">#{{ c.floor }}</span></td>
+                        <td class="c2">
+                            {% if c.parent_comment %}
+                                <div style="border: 1px solid #e6e1d3;background-color: #f2eddf;margin: 0.8em 0.8em 0.8em 2.3em;padding: 0.6em 0.8em;">
+                                <span>re:#{{ c.parent_comment.floor }}----{{ c.parent_comment.content }}</span>
+                                </div>
+                            {% endif %}
+                            {{ c.content }}
+                        </td>
+                        <td class="c3">
+                            <div class="top-right right"><span><a  floor="{{ c.floor }}" commentId="{{ c.id }}" name="intoComment" class="btn btn-warning btn-xs">回复</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <div class="content-foot">
+        <div class="content-top">
+            <span><h3>···回复···</h3></span>
+        </div>
+
+        <div class="editor-wrap">
+            <table class="table">
+                <tbody>
+                <tr>
+                    <td>
+                        <div class="well well-sm"><span id="showRe">re:{{ topic_obj.title }}</span></div>
+                        <input type="hidden" id="topicId" value="{{ topic_obj.id }}">
+                        <input type="hidden" id="topicTitle" value="{{ topic_obj.title }}">
+                        <input type="hidden" id="parentId" value="">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <textarea id="inputComment" class="form-control"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center">
+                        <div>
+                            <span id="clearEditor" class="btn btn-danger">清空</span>
+                            <span id="submitComment" class="btn btn-success">提交</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
+{% endblock %}
 
+{% block extra-js %}
+    <script type="text/javascript">
+        $(function () {
+            $("#clearEditor").click(function () {
+                $("#inputComment").val("");
+            });
+            $("#submitComment").click(function () {
+                submitComment();
+            });
+            $("a[name='intoComment']").click(function () {
+                document.getElementById("inputComment").scrollIntoView();
+                if($(this).text() == "回复"){
+                    $("#parentId").val($(this).attr("commentId"));
+                    $("#showRe").text("re:#"+$(this).attr("floor"));
+                }else{
+                    $("#parentId").val("");
+                    $("#showRe").text("re:"+$("#topicTitle").val());
+                }
+                console.log(this);
+            });
+
+        });
+
+        function submitComment() {
+            var csrfToken = $("input[name='csrfmiddlewaretoken']").val();
+            var comment = $("#inputComment").val();
+            var topicId = $("#topicId").val();
+            var parentId = $("#parentId").val();
+            console.log(csrfToken, comment, topicId);
+            if (csrfToken && comment && topicId) {
+                $.ajax({
+                    url: "{% url "bbs:comment" %}",
+                    method: "post",
+                    data: {
+                        "csrfmiddlewaretoken": csrfToken,
+                        "topicId": topicId,
+                        "comment": comment,
+                        "parentId": parentId,
+                    },
+                    dataType: "json",
+                    success: function (res) {
+                        if (res["status"]) {
+                            console.log("ok");
+                            window.location.href = "{% url "bbs:topic" forum_id topic_id %}";
+                        } else {
+                            alert(res["msg"]);
+                        }
+                    }
+                });
+            } else {
+                alert("回复内容不能为空");
+            }
+        }
+
+    </script>
 {% endblock %}

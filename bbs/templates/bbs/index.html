@@ -18,6 +18,7 @@
 
 
 {% block body %}
+    {% csrf_token %}
 
     {% block content-header %}
         <nav style="background-color: #f5e8cb" class="navbar navbar-default">

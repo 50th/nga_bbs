@@ -1,6 +1,7 @@
 from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.utils.safestring import mark_safe
 from django.db.models import F
+from django.db import transaction
 from django.views import View
 from django.conf import settings
 from bbs_models import models
@@ -204,8 +205,9 @@ def get_topic(request, *args, **kwargs):
     topic_id = kwargs.get("topic_id")
     topic_obj = models.Topic.objects.filter(id=topic_id).first()
     forum_id = kwargs.get("forum_id")
+    forum_obj = models.Forum.objects.filter(id=forum_id).first()
     forum_list = models.Forum.objects.all()
-    if topic_obj:
+    if topic_obj and forum_obj:
         user_obj = get_user_obj(request)
         page = request.GET.get("page")
         if page:
@@ -213,6 +215,7 @@ def get_topic(request, *args, **kwargs):
         else:
             page = 1
         content = mark_safe(topic_obj.content)
+        comment_list = models.Comment.objects.filter(topic_id=topic_id)
         return render(request, "bbs/topic.html", locals())
     else:
         return redirect("bbs:forum", permanent=True, **{"forum_id": forum_id})
@@ -238,6 +241,42 @@ class TopicView(View):
             topic_obj.save()
             res_msg["status"] = True
         return HttpResponse(json.dumps(res_msg))
+
+
+@login_reqiure
+def pub_comment(request):
+    res_mgs = {"status": False}
+    topic_id = request.POST.get("topicId")
+    comment = request.POST.get("comment")
+    parent_id = request.POST.get("parentId")
+    if topic_id.isnumeric() and comment:
+        user_obj = get_user_obj(request)
+        with transaction.atomic():
+            topic_obj = models.Topic.objects.select_for_update().filter(id=topic_id).first()
+            if topic_obj:
+                floor_count = topic_obj.floor_count
+                floor = floor_count+1
+                parent_comment = None
+                if parent_id.isnumeric():
+                    parent_comment = models.Comment.objects.filter(id=parent_id).first()
+                if parent_comment:
+                    comment_obj = models.Comment.objects.create(topic_id=topic_id,
+                                                                    content=comment,
+                                                                    from_user=user_obj,
+                                                                    floor=floor,
+                                                                    parent_comment=parent_comment
+                                                                    )
+                else:
+                    comment_obj = models.Comment.objects.create(topic_id=topic_id, content=comment, from_user=user_obj,
+                                                                floor=floor)
+                comment_obj.save()
+                models.Topic.objects.filter(id=topic_id).update(floor_count=floor)
+                res_mgs["status"] = True
+            else:
+                res_mgs["msg"] = "帖子不存在"
+    else:
+        res_mgs["msg"] = "评论不能为空"
+    return HttpResponse(json.dumps(res_mgs))
 
 
 def get_user_obj(request):
