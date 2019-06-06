@@ -1,12 +1,13 @@
 from django.shortcuts import render, HttpResponse, redirect, reverse
+from django.urls import resolve
 from django.utils.safestring import mark_safe
-from django.db.models import F
+import datetime,pytz
 from django.db import transaction
 from django.views import View
 from django.conf import settings
 from bbs_models import models
 import json
-from common import valid_code, email_handler, md5handler
+from common import valid_code, email_handler, md5handler, pagehandler
 
 
 def login_reqiure(func):
@@ -14,15 +15,36 @@ def login_reqiure(func):
         request = args[1] if isinstance(args[0], View) else args[0]
         username = request.COOKIES.get("username")
         password = request.COOKIES.get("password")
-        user = models.UserProfile.objects.filter(username=username, password=password).first()
-        if not user:
+        user_obj = models.UserProfile.objects.filter(username=username, password=password).first()
+        if not user_obj:
             username = request.session.get("username")
             password = request.session.get("password")
-            user = models.UserProfile.objects.filter(username=username, password=password).first()
-        if not user:
-            return redirect("bbs:login")
-        request.session["username"] = user.username
-        request.session["password"] = user.password
+            user_obj = models.UserProfile.objects.filter(username=username, password=password).first()
+        if not user_obj:
+            if not request.is_ajax():
+                return redirect("bbs:login")
+            else:
+                url = reverse("bbs:login")
+                res_msg = {"status": False, "code": 1, "msg": url}
+                return HttpResponse(json.dumps(res_msg))
+        request.session["username"] = user_obj.username
+        request.session["password"] = user_obj.password
+        rm = resolve(request.path)
+        url_info = (rm.app_name + ":" + rm.url_name, request.method.lower())
+        permission_set = set()
+        for r in user_obj.roles.all():
+            for p in r.permission.all():
+                permission_set.add((p.url_name, p.get_action_display()))
+        for p in user_obj.permissions.all():
+            permission_set.add((p.url_name, p.action))
+        print(permission_set)
+        if not url_info in permission_set:
+            if not request.is_ajax():
+                return render(request, "403.html")
+            else:
+                url = reverse("403")
+                res_msg = {"status": False, "code": 1, "msg": url}
+                return HttpResponse(json.dumps(res_msg))
         return func(*args, **kwargs)
     return inner
 
@@ -30,7 +52,9 @@ def login_reqiure(func):
 def index(request):
     user_obj = get_user_obj(request)
     forum_list = models.Forum.objects.all()
-    return render(request, "bbs/index.html", {"user_obj": user_obj, "forum_list": forum_list})
+    now = datetime.datetime.now()
+    topic_list = models.Topic.objects.filter(open_date__gt=now + datetime.timedelta(days=-7)).order_by("-floor_count")[0:5]
+    return render(request, "bbs/index.html", locals())
 
 
 def user_login(request):
@@ -190,12 +214,14 @@ def forums(request, *args, **kwargs):
         forum_list = models.Forum.objects.all()
         topic_list = models.Topic.objects.filter(forum_id=forum_id).extra(
             select={
-                "comment_count": "select count(*) from comment where topic_id=%s",
-                "comment_user": "select from_user_id from comment where topic_id=%s order by comment_date desc limit 1",
-                "comment_date": "select comment_date from comment where topic_id=%s order by comment_date desc limit 1",
+                "comment_user": "select username from user_profile where id=(select from_user_id from comment where topic_id=topic.id order by comment_date desc limit 1)",
+                "comment_date": "select comment_date from comment where topic_id=topic.id order by comment_date desc limit 1",
             },
-            select_params=(F("id"), F("id"), F("id"))
         ).order_by("-open_date")
+        topic_count = topic_list.count()
+        pager = pagehandler.Pager(page, topic_count, page_url=reverse("bbs:forum", kwargs={"forum_id": forum_id}), page_per=5)
+        page_bar = mark_safe(pager.get_page_bar())
+        topic_list = topic_list[pager.start_index:pager.end_index]
         return render(request, "bbs/forums.html", locals())
     else:
         return redirect("bbs:index")
@@ -251,29 +277,32 @@ def pub_comment(request):
     parent_id = request.POST.get("parentId")
     if topic_id.isnumeric() and comment:
         user_obj = get_user_obj(request)
-        with transaction.atomic():
-            topic_obj = models.Topic.objects.select_for_update().filter(id=topic_id).first()
-            if topic_obj:
-                floor_count = topic_obj.floor_count
-                floor = floor_count+1
-                parent_comment = None
-                if parent_id.isnumeric():
-                    parent_comment = models.Comment.objects.filter(id=parent_id).first()
-                if parent_comment:
-                    comment_obj = models.Comment.objects.create(topic_id=topic_id,
-                                                                    content=comment,
-                                                                    from_user=user_obj,
-                                                                    floor=floor,
-                                                                    parent_comment=parent_comment
-                                                                    )
+        if user_obj:
+            with transaction.atomic():
+                topic_obj = models.Topic.objects.select_for_update().filter(id=topic_id).first()
+                if topic_obj:
+                    floor_count = topic_obj.floor_count
+                    floor = floor_count+1
+                    parent_comment = None
+                    if parent_id.isnumeric():
+                        parent_comment = models.Comment.objects.filter(id=parent_id).first()
+                    if parent_comment:
+                        comment_obj = models.Comment.objects.create(topic_id=topic_id,
+                                                                        content=comment,
+                                                                        from_user=user_obj,
+                                                                        floor=floor,
+                                                                        parent_comment=parent_comment
+                                                                        )
+                    else:
+                        comment_obj = models.Comment.objects.create(topic_id=topic_id, content=comment, from_user=user_obj,
+                                                                    floor=floor)
+                    comment_obj.save()
+                    models.Topic.objects.filter(id=topic_id).update(floor_count=floor)
+                    res_mgs["status"] = True
                 else:
-                    comment_obj = models.Comment.objects.create(topic_id=topic_id, content=comment, from_user=user_obj,
-                                                                floor=floor)
-                comment_obj.save()
-                models.Topic.objects.filter(id=topic_id).update(floor_count=floor)
-                res_mgs["status"] = True
-            else:
-                res_mgs["msg"] = "帖子不存在"
+                    res_mgs["msg"] = "帖子不存在"
+        else:
+            res_mgs["msg"] = "请登录！"
     else:
         res_mgs["msg"] = "评论不能为空"
     return HttpResponse(json.dumps(res_mgs))
@@ -288,3 +317,7 @@ def get_user_obj(request):
         password = request.session.get("password")
         user = models.UserProfile.objects.filter(username=username, password=password).first()
     return user
+
+
+def forbidden(request):
+    return render(request, "403.html")

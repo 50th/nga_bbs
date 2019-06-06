@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load my_tags %}
 
 {% block head %}
     <style type="text/css">
@@ -11,8 +12,30 @@
         .container-fluid {
             padding: 2px;
         }
+
+
     </style>
     {% block extra-css %}
+        <style type="text/css">
+            .content-body {
+                margin: 0px 150px 8px 150px;
+                width: 35%;
+            }
+
+            .table {
+                box-shadow: 0 0 5px -3px #000;
+                margin: 0 0 8px 0;
+                background-color: #fffcee;
+            }
+
+            td.c1, td.c3 {
+                width: 10%;
+            }
+
+            td.c4 {
+                width: 25%;
+            }
+        </style>
     {% endblock %}
 {% endblock %}
 
@@ -78,6 +101,22 @@
     {% endblock %}
 
     {% block content-body %}
+        <div class="content-body">
+            <table class="table">
+                <tbody>
+                {% for t in topic_list %}
+                    <tr>
+                        <td class="c1"><a href="{% url "bbs:topic" t.forum_id t.id %}">{{ t.floor_count }}</a></td>
+                        <td class="c2"><a href="{% url "bbs:topic" t.forum_id t.id %}">{{ t.title }}</a></td>
+                        <td class="c3"><a href="{% url "bbs:topic" t.forum_id t.id %}">{{ t.user.username }}</a></td>
+                        <td class="c4"><a
+                                href="{% url "bbs:topic" t.forum_id t.id %}">{% convert_date t.open_date %}</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
     {% endblock %}
 
     {% block js %}

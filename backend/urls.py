@@ -18,6 +18,8 @@ from backend import views
 
 app_name = 'backend'
 urlpatterns = [
+    path('permission/', views.PermissionView.as_view(), name="permission"),
+    path('role/', views.RoleView.as_view(), name="role"),
     path('forum/', views.ForumView.as_view(), name="forum"),
     re_path('forum/(?P<forum_id>\d+)/', views.ForumView.as_view(), name="forum"),
     path('', views.index, name="index"),

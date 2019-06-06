@@ -5,7 +5,7 @@
 
     <style type="text/css">
         .forums-content {
-            margin: 0px 30px 8px 30px;
+            margin: 0px 150px 8px 150px;
         }
 
         .table, .top-right, .top-left {
@@ -19,11 +19,11 @@
         }
 
         td.c4, td.c6 {
-            width: 11%;
+            width: 13%;
         }
 
         td.c3,td.c5 {
-            width: 4%;
+            width: 5%;
         }
 
         .left {
@@ -35,6 +35,46 @@
             margin: 0 10px 8px 10px;
             float: right;
         }
+
+        .page-bar{
+            width: 100%;
+        }
+        .page-bar > table{
+            font-size: 1.085em;
+            border-radius: 2.5px;
+            background: #fffcee;
+            padding: 1px;
+            border: 1px solid #cacaca;
+            box-shadow: 0 0 5px -3px #000;
+            margin: auto;
+        }
+        .page-bar > table td{
+            line-height: 35px;
+            width: 60px;
+            padding: 0;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .page-bar > table a{
+            border-left: 1px solid #ead5bc;
+            background: #fff0cd;
+            font-weight: bold;
+            display: block;
+            padding: 0 0.8em;
+            cursor: pointer;
+            text-decoration-line: none;
+            color: #591804;
+        }
+        .page-bar > table a:hover{
+            background:#fff8e7;
+        }
+        .page-bar > table a.active{
+            background-color: #591804;
+            color: white;
+        }
+
+
     </style>
 {% endblock %}
 
@@ -62,7 +102,7 @@
                 </tr>
                 {% for t in topic_list %}
                     <tr>
-                        <td class="c1"><a href="{% url "bbs:topic" forum_id t.id %}">{{ t.comment_count }}</a></td>
+                        <td class="c1"><a href="{% url "bbs:topic" forum_id t.id %}">{{ t.floor_count }}</a></td>
                         <td class="c2"><a href="{% url "bbs:topic" forum_id t.id %}">{{ t.title }}</a></td>
                         <td class="c3">{{ t.user.username }}</td>
                         <td class="c4">{% convert_date t.open_date %}</td>
@@ -78,8 +118,9 @@
                 </tbody>
             </table>
         </div>
-
+        {{ page_bar }}
     </div>
+
 
 
 {% endblock %}

@@ -23,5 +23,6 @@ urlpatterns = [
     path('backend/', include('backend.urls')),
     path('bbs/', include('bbs.urls')),
     path('validcode/', views.get_valid_code, name="valid"),
+    path('403/', views.forbidden, name="403"),
     path('', views.index)
 ]

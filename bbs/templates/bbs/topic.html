@@ -4,7 +4,7 @@
 {% block extra-css %}
     <style type="text/css">
         .content-body, .content-foot {
-            margin: 0px 30px 8px 30px;
+            margin: 0px 150px 8px 150px;
         }
 
         .table, .top-right, .top-left {
@@ -13,7 +13,7 @@
             background-color: #fffcee;
         }
 
-        .editor-wrap>table>tbody>tr>td{
+        .editor-wrap > table > tbody > tr > td {
             border: 0px;
         }
 
@@ -46,6 +46,20 @@
             background-color: #fffcee;
         }
 
+        .user-info-box {
+            width: 70%;
+            margin: auto;
+            border: 1px solid #fffcee;
+        }
+    .avatar{
+        margin: 10px 0px 0px 0px;
+        width: 150px;
+        height: 150px;
+    }
+    .user-wrap{
+        margin: 10px 0px 0px 0px;
+    }
+
     </style>
 {% endblock %}
 
@@ -66,9 +80,13 @@
             <table rules="none" class="table">
                 <tbody>
                 <tr>
-                    <td class="c1"><a>{{ user_obj.username }}</a></td>
+                    <td class="c1">
+                        <div class="user-info-box">
+                            <div><img class="avatar" src="{{ topic_obj.user.avatar }}"></div>
+                            <div class="user-wrap"><a>{{ topic_obj.user.username }}</a></div>
+                        </div>
+                    </td>
                     <td class="c2">{{ content }}</td>
-
                 </tr>
                 </tbody>
             </table>
@@ -76,17 +94,32 @@
                 <tbody>
                 {% for c in comment_list %}
                     <tr>
-                        <td class="c1"><a>{{ c.from_user.username }}</a><span class="right">#{{ c.floor }}</span></td>
+                        <td class="c1">
+                            <div class="user-info-box">
+                                <div><img class="avatar" src="{{ c.from_user.avatar }}"></img></div>
+                                <div class="user-wrap"><a>{{ c.from_user.username }}</a>
+                                <span class="label label-primary right">#{{ c.floor }}</span></div>
+                            </div>
+                        </td>
                         <td class="c2">
                             {% if c.parent_comment %}
                                 <div style="border: 1px solid #e6e1d3;background-color: #f2eddf;margin: 0.8em 0.8em 0.8em 2.3em;padding: 0.6em 0.8em;">
-                                <span>re:#{{ c.parent_comment.floor }}----{{ c.parent_comment.content }}</span>
+                                    <span style="display: block">
+                                        re:
+                                        <span class="label label-primary">
+                                            #{{ c.parent_comment.floor }}
+                                        </span>
+                                        <a>{{ c.parent_comment.from_user }}</a>
+                                    </span>
+                                    <span>{{ c.parent_comment.content }}</span>
                                 </div>
                             {% endif %}
                             {{ c.content }}
                         </td>
                         <td class="c3">
-                            <div class="top-right right"><span><a  floor="{{ c.floor }}" commentId="{{ c.id }}" name="intoComment" class="btn btn-warning btn-xs">回复</a></span>
+                            <div class="top-right right"><span><a floor="{{ c.floor }}" commentId="{{ c.id }}"
+                                                                  name="intoComment"
+                                                                  class="btn btn-warning btn-xs">回复</a></span>
                             </div>
                         </td>
                     </tr>
@@ -143,12 +176,12 @@
             });
             $("a[name='intoComment']").click(function () {
                 document.getElementById("inputComment").scrollIntoView();
-                if($(this).text() == "回复"){
+                if ($(this).text() == "回复") {
                     $("#parentId").val($(this).attr("commentId"));
-                    $("#showRe").text("re:#"+$(this).attr("floor"));
-                }else{
+                    $("#showRe").text("re:#" + $(this).attr("floor"));
+                } else {
                     $("#parentId").val("");
-                    $("#showRe").text("re:"+$("#topicTitle").val());
+                    $("#showRe").text("re:" + $("#topicTitle").val());
                 }
                 console.log(this);
             });
@@ -160,7 +193,6 @@
             var comment = $("#inputComment").val();
             var topicId = $("#topicId").val();
             var parentId = $("#parentId").val();
-            console.log(csrfToken, comment, topicId);
             if (csrfToken && comment && topicId) {
                 $.ajax({
                     url: "{% url "bbs:comment" %}",
@@ -174,10 +206,13 @@
                     dataType: "json",
                     success: function (res) {
                         if (res["status"]) {
-                            console.log("ok");
                             window.location.href = "{% url "bbs:topic" forum_id topic_id %}";
                         } else {
-                            alert(res["msg"]);
+                            if(res["code"]==0){
+                                alert(res["msg"]);
+                            }else if(res["code"]==1){
+                                window.location.href = res["msg"];
+                            }
                         }
                     }
                 });

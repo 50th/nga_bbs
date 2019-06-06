@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div style="text-align: center; margin-top: 200px"><h4><a style="cursor: pointer" herf="{% url "bbs:index" %}">你无权访问此页面，点击跳转到主页，或者在<span id="time">5</span>秒后自动跳转</a></h4></div>
+
+    <script type="text/javascript">
+        $(function () {
+           var timer = setInterval(function () {
+               var time = $("#time").text();
+               if(time<=0){
+                   window.location.href = {% url "bbs:index" %}
+               }else{
+                   $("#time").text(time-1);
+               }
+           },1000);
+        });
+    </script>
+{% endblock %}

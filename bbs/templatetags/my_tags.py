@@ -12,7 +12,7 @@ def convert_date(sourse_date):
     now = datetime.datetime.now().replace(tzinfo=tz)
     # sourse_date = datetime.datetime.strptime(sourse_date, "%Y-%m-%d %H:%M:%S.%f")
     c = now - sourse_date.replace(tzinfo=tz)
-    if c.seconds/3600 > 1:
+    if c.seconds/3600 > 1 or c.days > 0:
         return sourse_date.strftime("%Y-%m-%d %H:%M:%S")
     else:
         return "%s分钟前" % int(c.seconds/60)

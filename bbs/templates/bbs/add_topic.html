@@ -104,7 +104,11 @@
                         if(res["status"]){
                             window.location.href = "{% url "bbs:forum" forum_id %}";
                         }else{
-                            alert("标题和内容不能为空");
+                            if(res["code"]==0){
+                                alert("标题和内容不能为空");
+                            }else if(res["code"]==1){
+                                window.location.href = res["msg"];
+                            }
                         }
                     },
                 });

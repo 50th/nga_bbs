@@ -70,7 +70,7 @@
                                 <li><a href="#">消息</a></li>
                             </ul>
                         </li>
-                        <li><a role="button" href="{% url "logout" %}">登出</a></li>
+                        <li><a role="button" href="{% url "bbs:logout" %}">登出</a></li>
                     {% endif %}
 
                 </ul>
@@ -109,6 +109,29 @@
                 </div>
             </div>
         </div>
+
+        <div class="show-bar">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <a href="{% url "backend:permission" %}" class="btn panel-title">权限</a>
+                </div>
+                <div class="panel-body">
+                    当前总共有{{ permission_count }}权限
+                </div>
+            </div>
+        </div>
+
+        <div class="show-bar">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <a href="{% url "backend:role" %}" class="btn panel-title">角色</a>
+                </div>
+                <div class="panel-body">
+                    当前总共有{{ role_count }}角色
+                </div>
+            </div>
+        </div>
+
     </div>
 
 

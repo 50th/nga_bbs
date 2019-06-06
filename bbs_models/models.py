@@ -3,23 +3,35 @@ from django.db import models
 
 class Permission(models.Model):
     """权限表"""
-    name = models.CharField(max_length=32)
-    action = models.CharField(max_length=32)
+    name = models.CharField(max_length=32, unique=False)
+    url_name = models.CharField(max_length=64)
+    action_choices = (
+        (0, "all"),
+        (1, "get"),
+        (2, "post"),
+        (3, "put"),
+        (4, "delete"),
+    )
+    action = models.IntegerField(choices=action_choices, default=0)
+
+    class Meta:
+        db_table = "permission"
+        unique_together = ("url_name", "action")
 
     def __str__(self):
         return self.name
 
 
-class Rule(models.Model):
+class Role(models.Model):
     """角色表"""
     name = models.CharField(max_length=32)
     permission = models.ManyToManyField("Permission")
 
     class Meta:
-        db_table = "rule"
+        db_table = "role"
 
     def __str__(self):
-        return self.rule_name
+        return self.name
 
 
 class UserProfile(models.Model):
@@ -31,9 +43,10 @@ class UserProfile(models.Model):
     email = models.EmailField()
     phone = models.IntegerField(null=True, blank=True)
     # avatar = models.ImageField(width_field=50)
-    registe_date = models.DateTimeField(auto_now_add=True)
-    roles = models.ManyToManyField("Rule", blank=True)
+    register_date = models.DateTimeField(auto_now_add=True)
+    roles = models.ManyToManyField("Role", blank=True)
     permissions = models.ManyToManyField("Permission", blank=True)
+    avatar = models.ImageField(default="/static/image/avatar/default.gif")
     status_choices = (
         (0, "未激活"),
         (1, "正常"),
